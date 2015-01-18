@@ -1,0 +1,6 @@
+FROM scratch
+
+ADD rootfs/ /
+
+ENTRYPOINT ["/bin/node"]
+

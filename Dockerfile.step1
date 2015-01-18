@@ -1,0 +1,46 @@
+FROM debian:wheezy
+
+ENV PACKAGE PACKAGE_NAME
+RUN sed -i 's:http.debian.net:mirror.ancl.hawaii.edu/linux:g' /etc/apt/sources.list && apt-get update
+
+ADD ${PACKAGE}.tar.gz /
+
+RUN ls -al /
+RUN ls -al /$PACKAGE
+
+RUN ldd $PACKAGE/bin/node | cut -d" " -f1 | xargs -n1 -i cp -v --parents {} ${PACKAGE} || /bin/true
+RUN ldd $PACKAGE/bin/node | cut -d" " -f3 | xargs -n1 -i cp -v --parents {} ${PACKAGE}
+RUN cp -v \
+    --parents \
+    $(which sh) \
+    $(which dirname) \
+    $(which ls) \
+    $(which cat) \
+    $(which env) \
+    ${PACKAGE}
+
+RUN cp -v --parents \
+    /lib/x86_64-linux-gnu/libc.so* \
+    /lib/x86_64-linux-gnu/libdl.so* \
+    /lib/x86_64-linux-gnu/libgcc_s.so* \
+    /lib/x86_64-linux-gnu/libm.so* \
+    /lib/x86_64-linux-gnu/libnss_dns.so* \
+    /lib/x86_64-linux-gnu/libnss_files.so* \
+    /lib/x86_64-linux-gnu/libpthread.so* \
+    /lib/x86_64-linux-gnu/libresolv.so* \
+    /lib/x86_64-linux-gnu/librt.so* \
+    /usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
+    ${PACKAGE}
+
+
+
+RUN sed -i 's:uidSupport = process.getuid && process.setuid:uidSupport = false:g' ${PACKAGE}/lib/node_modules/npm/node_modules/uid-number/uid-number.js
+RUN mkdir ${PACKAGE}/tmp ${PACKAGE}/root
+#RUN cp -rv --parents /bin ${PACKAGE}/
+#run cp -rv --parents /lib ${PACKAGE}/
+
+
+WORKDIR /${PACKAGE}
+CMD ["tar", "czf", "-", "."]
+
+
